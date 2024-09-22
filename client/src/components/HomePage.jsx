@@ -20,7 +20,6 @@ const Message = styled.p`
 
 const HomePage = () => {
   const [message, setMessage] = useState('');
-  const [listening, setListening] = useState(false);
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -29,7 +28,6 @@ const HomePage = () => {
     recognition.continuous = true; // Continuously listen for speech
 
     recognition.onstart = () => {
-      setListening(true);
       setMessage("Escutando...");
     };
 
@@ -44,6 +42,11 @@ const HomePage = () => {
         try {
           const response = await axios.post('http://localhost:5000/api/detect-keyword', { keyword: "emergência" });
           setMessage(response.data.message);
+          
+          // Criar link para o telefone e simular clique
+          const telLink = document.createElement('a');
+          telLink.href = 'tel:190';
+          telLink.click();
         } catch (error) {
           console.error('Erro ao conectar com o backend:', error);
           setMessage('Erro ao conectar com o backend.');
@@ -53,13 +56,6 @@ const HomePage = () => {
 
     recognition.onerror = (event) => {
       setMessage(`Erro no reconhecimento: ${event.error}`);
-      setListening(false);
-    };
-
-    recognition.onend = () => {
-      if (listening) {
-        recognition.start();  // Restart listening when it stops
-      }
     };
 
     recognition.start();
