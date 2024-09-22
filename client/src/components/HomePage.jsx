@@ -1,56 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import styled from 'styled-components';
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  background-color: white;
+  height: 5%;
+  background-color: #f0f0f0;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
 `;
 
-const Message = styled.p`
-  margin-top: 20px;
+const Title = styled.h1`
+  font-size: 36px;
+  color: #333;
+  margin-bottom: 20px;
+`;
+
+const Status = styled.p`
   font-size: 18px;
   color: ${props => props.success ? 'green' : 'red'};
 `;
 
 const HomePage = () => {
   const [message, setMessage] = useState('');
+  const [isListening, setIsListening] = useState(false);
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = 'pt-BR';
-    recognition.continuous = true; // Continuously listen for speech
+    recognition.lang = 'pt-BR';  // Configura o reconhecimento para português
+    recognition.continuous = true; // Continuamente ouvir sem parar
+    recognition.interimResults = false; // Apenas resultados finais
 
     recognition.onstart = () => {
-      setMessage("Escutando...");
+      setIsListening(true);
+      setMessage("Escutando... Diga 'emergência' para ligar.");
     };
 
-    recognition.onresult = async (event) => {
-      const transcript = event.results[event.resultIndex][0].transcript;
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.resultIndex][0].transcript.toLowerCase().trim();
       console.log(`Detectado: ${transcript}`);
-      
-      if (transcript.toLowerCase().includes("emergência")) {
-        setMessage("Palavra-chave detectada, ligando para 190...");
+
+      if (transcript.includes("emergência")) {
+        setMessage("Palavra-chave detectada! Ligando para 190...");
         
-        // Enviar solicitação para o backend
-        try {
-          const response = await axios.post('http://localhost:5000/api/detect-keyword', { keyword: "emergência" });
-          setMessage(response.data.message);
-          
-          // Criar link para o telefone e simular clique
-          const telLink = document.createElement('a');
-          telLink.href = 'tel:190';
-          telLink.click();
-        } catch (error) {
-          console.error('Erro ao conectar com o backend:', error);
-          setMessage('Erro ao conectar com o backend.');
-        }
+        // Criar link tel e simular clique para abrir o discador
+        const telLink = document.createElement('a');
+        telLink.href = 'tel:190';
+        document.body.appendChild(telLink);
+        telLink.click();
+        document.body.removeChild(telLink);
       }
     };
 
@@ -58,18 +59,22 @@ const HomePage = () => {
       setMessage(`Erro no reconhecimento: ${event.error}`);
     };
 
+    recognition.onend = () => {
+      setIsListening(false);
+      recognition.start(); // Reiniciar o reconhecimento
+    };
+
     recognition.start();
   };
 
   useEffect(() => {
-    startListening();  // Inicia o reconhecimento ao carregar a página
+    startListening();  // Inicia o reconhecimento assim que o componente é carregado
   }, []);
 
   return (
     <Container>
-      <h1>Detector de Emergência</h1>
-      <p>A aplicação está atenta, diga "emergência" para ligar automaticamente para o 190.</p>
-      {message && <Message success={message.includes('ligando')}>{message}</Message>}
+      <Title>Detector de Emergência</Title>
+      <Status success={isListening}>{message}</Status>
     </Container>
   );
 };
