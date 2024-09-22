@@ -9,7 +9,7 @@ const GlobalStyle = createGlobalStyle`
 
   body {
     font-family: 'Poppins', sans-serif;
-    background-color: #f5f5f5;
+    background-color: black;
     display: flex;
     justify-content: center;
     align-items: center;

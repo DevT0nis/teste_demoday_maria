@@ -1,8 +1,12 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS  # Importando CORS
 import os
 import subprocess
 
 app = Flask(__name__)
+
+# Habilitar CORS para qualquer origem
+CORS(app)
 
 # Rota para processar a detecção da palavra-chave
 @app.route('/api/detect-keyword', methods=['POST'])
